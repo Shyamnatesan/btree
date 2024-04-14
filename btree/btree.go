@@ -270,6 +270,83 @@ func (tree *Tree) Put(key int) {
 	currentNode.insert(key, tree)
 }
 
+func (tree *Tree) Del(key int) {
+	// TODO:
+	//  THIS IS DELETION FROM A LEAF NODE
+	// LOOK OUT : updating parent pointers, shifting children if necessary, updating numOfKeys
+	// 1. first find the node and delete the node,
+	// 		and do the appropriate element shift, and update the numOfKeys in the node.
+	// 2. check if node.numOfKeys >= MIN_NUM_OF_KEYS
+	// 		if node.numOfKeys >= MIN_NUM_OF_KEYS {
+	// 			in this case, just return. it follows the btree property
+	// 		}else{
+	// 			=> we try to borrow
+	// 			=> let us assume, currentNode is our node, in which we deleted the key,
+	// 				and is now not following the propety.
+	// 			=> let us assume,
+	// 				 we have the currentNode's position in its parent's children array
+	// 				 For eg: assume root = 40. and the MIN_NUM_OF_KEYS = 2
+	// 						50 => root
+	// 					   /  \
+	// 			     |20, 40|  |60, 70|
+	// 			 	 and we want to delete the key, 60.
+	// 				 NOW, 60 is at "position" 1 of the children array of root.
+	// 				  root.children[1] = *ptr to the node[40, 60]
+	// 					above is the position
+	// 
+	// 			=> so we have currentNode and the position
+	// 			=> now we check the currentNode's left sibling
+	// 
+	// 			=> if currentNode.parent.children[position - 1].numOfKeys > MIN_NUM_OF_KEYS {
+	//  			it means the left sibling has more than required keys. so it can spare
+	// 				so, we take the separater(the key in the parentNode which separates the siblings) and,
+	// 					 put it in the currentNode and shift elements accordingly, and update the numOfKeys.
+	// 				and then we take the rightmost key in the left sibling and put it in the separater's place,
+	// 				and update the numOfKeys in the left sibling
+	// 				return;
+	// 			   }
+	// 			=> left sibling does not have keys to spare, so we check for right sibling
+	// 
+	// 			   else if currentNode.parent.children[position + 1].numOfKeys > MIN_NUM_OF_KEYS {
+	//				it means the right sibling has more than required keys. so it can spare
+	// 			    so, we take the separater(the key in the parentNode which separates the siblings) and,
+	// 					put it in the currentNode and shift elements accordingly, and update the numOfKeys.
+	// 				and then we take the leftmost key in the right sibling and put it in the separater's place, 
+	// 				and update the numOfKeys in the right sibling
+	// 				return;
+	// 			   }
+	//			=> now, both left and right sibling does not have keys to spare, so
+	// 				if left sibling != nil {
+	// 				 we combine our currentNode with the left sibling, with the separater
+	// 				 eg: currentNode = left sibling + separater + currentNode
+	// 				 and update the numOfKeys of the parent, 
+	// 				 because we just brought separater down to currentNode.
+	//              }else if(right sibling != nil) {
+	// 				  we combine our currentNode with the right sibling, with the separater
+	// 				  eg: currentNode = currentNode + separater + right sibling
+	// 				  and update the numOfKeys of the parent, 
+	// 				  because we just brought separater down to currentNode sibling.
+	// 				}
+	// 				
+	// 			
+	// 			=>	lets asumme, i call the node, newCurrentNode which is the parent of
+	// 				 (left sibling and current) or (right sibling and current) from which we just brought separater down.
+	// 				now, that newCurrentNode has lost its separater key.
+	// 			=> after joining with either the left or right sibling, check is newCurrentNode.parent == nil
+	// 				if nil, make the newCurrentNode as root.
+	// 				recursively call this same function() with node as newCurrentNode
+	// 		}
+
+	// THIS IS DELETION FROM AN INTERNAL NODE
+	// 1. Find the successor key
+	// 		successor key is the smallest key in the right subtree(always in leaf node)
+	// 		steps :  => move to the right child
+	// 				 => keep on moving to the 0th child of each node, till we reach a leaf node
+	// 				 => leftmost key in that leaf node is the successor key
+	// 2. Copy the successor key at the place of the key to be deleted
+	// 3. Delete the successor key (deletion from a leaf node)
+}
+
 func NewTree() *Tree {
 	return &Tree{
 		root: nil,
