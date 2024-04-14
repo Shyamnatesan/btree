@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"time"
 
 	"github.com/Shyamnatesan/btree/btree"
 )
@@ -15,7 +14,6 @@ func generateUniqueRandomNumbers(n, min, max int) []int {
 		return nil
 	}
 
-	rand.Seed(time.Now().UnixNano())
 	nums := make(map[int]bool)
 	result := make([]int, 0, n)
 
@@ -26,10 +24,9 @@ func generateUniqueRandomNumbers(n, min, max int) []int {
 			result = append(result, num)
 		}
 	}
+
 	return result
 }
-
-
 
 
 func main(){
@@ -38,11 +35,6 @@ func main(){
 	for _, in := range input{
 		btree.Put(in)
 	}
-
-	// for i := 100000; i >= 10;  {
-	// 	btree.Put(i)
-	// 	i -= 10
-	// }
 
 	inorder := btree.Print()
 	log.Println("inorder traversal of the whole btree =>>>> ")
