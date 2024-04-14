@@ -94,17 +94,23 @@ func (node *Node) maxKeyThresholdReached(key int, rightChild *Node, tree *Tree, 
 		index := node.insertIntoNode(key)
 		log.Println("rightChild passed is", rightChild)
 		if rightChild != nil {
-			node.children[index + 1] = rightChild
-			rightChild.parent = node
-		}
+            for i := node.numKeys; i > index + 1; i-- {
+                node.children[i] = node.children[i - 1]
+            }
+            node.children[index + 1] = rightChild
+            rightChild.parent = node
+        }
 		return
 	}else{
 		// else, insert the key in the keys array in a sorted manner
 		index := node.insertIntoNode(key)
 		if rightChild != nil {
-			node.children[index + 1] = rightChild 
-			rightChild.parent = node
-		}
+            for i := node.numKeys; i > index + 1; i-- {
+                node.children[i] = node.children[i - 1]
+            }
+            node.children[index + 1] = rightChild
+            rightChild.parent = node
+        }
 		// split it. now you'll have leftnode, rightnode, and median(to pass to the parent node)
 		rightNode, median := node.splitNode()
 		log.Println("rightnode", rightNode.keys)
