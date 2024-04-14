@@ -6,7 +6,7 @@ import (
 
 
 const (
-	M = 5 // ORDER OF A TREE
+	M = 4 // ORDER OF A TREE
 	MAX_NUM_OF_KEYS = M - 1 // MAXIMUM NUMBER OF KEYS ALLOWED IN A NODE
 	ceilOfM = M / 2
 	MIN_NUM_OF_KEYS = ceilOfM - 1 // MINIMUM NUMBER OF KEYS ALLOWED IN A NODE EXCEPT ROOT
@@ -34,8 +34,6 @@ func (node *Node) searchNode(key int, pos *int) *Node {
 			break
 		}
 	}
-	
-
 	return nil
 }
 
@@ -86,7 +84,7 @@ func (node *Node) maxKeyThresholdReached(key int, rightChild *Node, tree *Tree, 
 	// rightChild is initially nil
 	// when recursively called for parents, we pass the rightnode
 
-	// TODO: sort out this rightnode
+
 	// if rightnode is not nil, we have to add it to the node.children
 	// if rightnode is nil, we do nothing
 
@@ -316,58 +314,6 @@ func (tree *Tree) Print() []int {
 
 func main(){
 	btree := NewTree()
-	// btree.Put(10)
-	// btree.Put(20)
-	// btree.Put(30)
-	// btree.Put(40)
-	// btree.Put(50)
-	// btree.Put(60)
-	// btree.Put(70)
-	// btree.Put(80)
-	// btree.Put(90)
-	// btree.Put(100)
-	// btree.Put(110)
-	// btree.Put(120)
-	// btree.Put(130)
-	// btree.Put(140)
-	// btree.Put(150)
-	// btree.Put(160)
-	// btree.Put(170)
-	// btree.Put(180)
-	// btree.Put(190)
-	// btree.Put(200)
-	// btree.Put(210)
-	// btree.Put(220)
-	// btree.Put(230)
-	// btree.Put(240)
-	// btree.Put(250)
-	// btree.Put(260)
-	// btree.Put(270)
-	// btree.Put(280)
-	// btree.Put(290)
-	// btree.Put(300)
-	// btree.Put(310)
-	// btree.Put(320)
-	// btree.Put(330)
-	// btree.Put(340)
-	// btree.Put(350)
-	// btree.Put(360)
-	// btree.Put(370)
-	// btree.Put(380)
-	// btree.Put(390)
-	// btree.Put(400)
-	// btree.Put(410)
-	// btree.Put(420)
-	// btree.Put(430)
-	// btree.Put(440)
-	// btree.Put(450)
-	// btree.Put(460)
-	// btree.Put(470)
-	// btree.Put(480)
-	// btree.Put(490)
-	// btree.Put(500)
-	// btree.Put(510)
-	// btree.Put(520)
 	for i := 10; i < 10000;  {
 		btree.Put(i)
 		i += 10
