@@ -31,14 +31,14 @@ func generateUniqueRandomNumbers(n, min, max int) []int {
 
 func main(){
 	btree := btree.NewTree()
-	input := generateUniqueRandomNumbers(10000, 0, 10000)
-	for _, in := range input{
+	insertInput := generateUniqueRandomNumbers(100, 0, 100)
+	for _, in := range insertInput{
 		btree.Put(in)
 	}
 
 	inorder := btree.Print()
-	log.Println("inorder traversal of the whole btree =>>>> ")
+	log.Println("inorder traversal of the whole btree ==============================================>>>>>>>>> ")
 	log.Println(inorder)
-	log.Println("===================================>")
-	
+	log.Println("===========================================================================================> ")
+
 }

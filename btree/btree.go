@@ -84,7 +84,6 @@ func (node *Node) maxKeyThresholdReached(key int, rightChild *Node, tree *Tree, 
 	// rightChild is initially nil
 	// when recursively called for parents, we pass the rightnode
 
-
 	// if rightnode is not nil, we have to add it to the node.children
 	// if rightnode is nil, we do nothing
 
@@ -92,7 +91,6 @@ func (node *Node) maxKeyThresholdReached(key int, rightChild *Node, tree *Tree, 
 	// if so return from this function
 	if node.numKeys != MAX_NUM_OF_KEYS {
 		index := node.insertIntoNode(key)
-		log.Println("rightChild passed is", rightChild)
 		if rightChild != nil {
             for i := node.numKeys; i > index + 1; i-- {
                 node.children[i] = node.children[i - 1]
@@ -113,8 +111,6 @@ func (node *Node) maxKeyThresholdReached(key int, rightChild *Node, tree *Tree, 
         }
 		// split it. now you'll have leftnode, rightnode, and median(to pass to the parent node)
 		rightNode, median := node.splitNode()
-		log.Println("rightnode", rightNode.keys)
-		log.Println("median", median)
 		if node.parent == nil {
 			// log.Println("no parent")
 			// if this current node's parent is nil,
@@ -140,8 +136,6 @@ func (node *Node) maxKeyThresholdReached(key int, rightChild *Node, tree *Tree, 
 			// else, if current node's parent is not nil,
 			// then after splitting, we'll have a median right,
 			// call this function recursively for the current node's parent and pass the median as key
-			log.Println("current node", node.keys)
-			log.Println("current node's parent", node.parent.keys)
 			node.parent.maxKeyThresholdReached(median, rightNode, tree, pos)
 
 		}
@@ -151,6 +145,9 @@ func (node *Node) maxKeyThresholdReached(key int, rightChild *Node, tree *Tree, 
 func (node *Node) splitNode() (*Node, int) {
 	// log.Println("splitting the node ", node.keys)
 	medianIndex := node.numKeys / 2
+	if medianIndex % 2 == 0 {
+		medianIndex--
+	}
 	median := node.keys[medianIndex]
 
 	// create a new node called rightnode
@@ -191,35 +188,12 @@ func (node *Node) splitNode() (*Node, int) {
 	// copy(node.children[:], node.children[:medianIndex + 1])
 	
 	// else no children, then do nothing
-
-	log.Println("current node", node.keys)
-	log.Println("current node's children")
-	for i := 0; i < node.numKeys + 1; i++ {
-		if node.children[i] == nil {
-			log.Println("nil")
-		}else{
-			log.Println(node.children[i].keys)
-		}
-	}
-
-	log.Println("right node", rightNode.keys)
-	log.Println("right node's children")
-	for i := 0; i < rightNode.numKeys + 1; i++ {
-		if rightNode.children[i] == nil {
-			log.Println("nil")
-		}else{
-			log.Println(rightNode.children[i].keys)
-		}
-	}
-
-
 	return rightNode, median
 }
 
 func (node *Node) insert(key int, tree *Tree) {
 	// if the node has space, 
 	// insert into the node by shifting elements accordingly
-
 	pos := 0
 	if node.isLeaf {
 		if node.numKeys == MAX_NUM_OF_KEYS {
@@ -239,6 +213,28 @@ func (node *Node) insert(key int, tree *Tree) {
 		node.children[pos].insert(key, tree)
 	}
 }
+
+func (node *Node) inorder(result *[]int) {
+	if node == nil {
+	  return
+	}
+	if node.isLeaf {
+	  // Print the keys in the leaf node
+	  for i := 0; i < node.numKeys; i++ {
+		*result = append(*result, node.keys[i])
+	  }
+	  return
+	}
+	// Traverse child nodes and keys
+	for i := 0; i <= node.numKeys; i++ { // process all children (0 to numKeys+1)
+	  // Recursively traverse the i-th child
+	  node.children[i].inorder(result)
+	  // Append the i-th key (if applicable)
+	  if i < node.numKeys {
+		*result = append(*result, node.keys[i])
+	  }
+	}
+  }
 
 func NewNode() *Node {
 	return &Node{
@@ -270,118 +266,6 @@ func (tree *Tree) Put(key int) {
 	currentNode.insert(key, tree)
 }
 
-func (tree *Tree) Del(key int) {
-	// TODO:
-	//  THIS IS DELETION FROM A LEAF NODE
-	// LOOK OUT : updating parent pointers, shifting children if necessary, updating numOfKeys
-	// 1. first find the node and delete the node,
-	// 		and do the appropriate element shift, and update the numOfKeys in the node.
-	// 2. check if node.numOfKeys >= MIN_NUM_OF_KEYS
-	// 		if node.numOfKeys >= MIN_NUM_OF_KEYS {
-	// 			in this case, just return. it follows the btree property
-	// 		}else{
-	// 			=> we try to borrow
-	// 			=> let us assume, currentNode is our node, in which we deleted the key,
-	// 				and is now not following the propety.
-	// 			=> let us assume,
-	// 				 we have the currentNode's position in its parent's children array
-	// 				 For eg: assume root = 40. and the MIN_NUM_OF_KEYS = 2
-	// 						50 => root
-	// 					   /  \
-	// 			     |20, 40|  |60, 70|
-	// 			 	 and we want to delete the key, 60.
-	// 				 NOW, 60 is at "position" 1 of the children array of root.
-	// 				  root.children[1] = *ptr to the node[40, 60]
-	// 					above is the position
-	// 
-	// 			=> so we have currentNode and the position
-	// 			=> now we check the currentNode's left sibling
-	// 
-	// 			=> if currentNode.parent.children[position - 1].numOfKeys > MIN_NUM_OF_KEYS {
-	//  			it means the left sibling has more than required keys. so it can spare
-	// 				so, we take the separater(the key in the parentNode which separates the siblings) and,
-	// 					 put it in the currentNode and shift elements accordingly, and update the numOfKeys.
-	// 				and then we take the rightmost key in the left sibling and put it in the separater's place,
-	// 				and update the numOfKeys in the left sibling
-	// 				return;
-	// 			   }
-	// 			=> left sibling does not have keys to spare, so we check for right sibling
-	// 
-	// 			   else if currentNode.parent.children[position + 1].numOfKeys > MIN_NUM_OF_KEYS {
-	//				it means the right sibling has more than required keys. so it can spare
-	// 			    so, we take the separater(the key in the parentNode which separates the siblings) and,
-	// 					put it in the currentNode and shift elements accordingly, and update the numOfKeys.
-	// 				and then we take the leftmost key in the right sibling and put it in the separater's place, 
-	// 				and update the numOfKeys in the right sibling
-	// 				return;
-	// 			   }
-	//			=> now, both left and right sibling does not have keys to spare, so
-	// 				if left sibling != nil {
-	// 				 we combine our currentNode with the left sibling, with the separater
-	// 				 eg: currentNode = left sibling + separater + currentNode
-	// 				 and update the numOfKeys of the parent, 
-	// 				 because we just brought separater down to currentNode.
-	//              }else if(right sibling != nil) {
-	// 				  we combine our currentNode with the right sibling, with the separater
-	// 				  eg: currentNode = currentNode + separater + right sibling
-	// 				  and update the numOfKeys of the parent, 
-	// 				  because we just brought separater down to currentNode sibling.
-	// 				}
-	// 				
-	// 			
-	// 			=>	lets asumme, i call the node, newCurrentNode which is the parent of
-	// 				 (left sibling and current) or (right sibling and current) from which we just brought separater down.
-	// 				now, that newCurrentNode has lost its separater key.
-	// 			=> after joining with either the left or right sibling, check is newCurrentNode.parent == nil
-	// 				if nil, make the newCurrentNode as root.
-	// 				recursively call this same function() with node as newCurrentNode
-	// 		}
-
-	// THIS IS DELETION FROM AN INTERNAL NODE
-	// 1. Find the successor key
-	// 		successor key is the smallest key in the right subtree(always in leaf node)
-	// 		steps :  => move to the right child
-	// 				 => keep on moving to the 0th child of each node, till we reach a leaf node
-	// 				 => leftmost key in that leaf node is the successor key
-	// 2. Copy the successor key at the place of the key to be deleted
-	// 3. Delete the successor key (deletion from a leaf node)
-}
-
-func NewTree() *Tree {
-	return &Tree{
-		root: nil,
-		maxKeys: MAX_NUM_OF_KEYS,
-	}
-}
-
-
-func (node *Node) inorder(result *[]int) {
-	if node == nil {
-	  return
-	}
-  
-	if node.isLeaf {
-	  // Print the keys in the leaf node
-	
-	  for i := 0; i < node.numKeys; i++ {
-		*result = append(*result, node.keys[i])
-	  }
-
-	  return
-	}
-  
-	// Traverse child nodes and keys
-	for i := 0; i <= node.numKeys; i++ { // process all children (0 to numKeys+1)
-	  // Recursively traverse the i-th child
-	  node.children[i].inorder(result)
-  
-	  // Append the i-th key (if applicable)
-	  if i < node.numKeys {
-		*result = append(*result, node.keys[i])
-	  }
-	}
-  }
-
 func (tree *Tree) Print() []int {
     if tree.root == nil {
         return []int{}
@@ -390,4 +274,13 @@ func (tree *Tree) Print() []int {
     result := []int{}
     tree.root.inorder(&result)
     return result
+}
+
+
+
+func NewTree() *Tree {
+	return &Tree{
+		root: nil,
+		maxKeys: MAX_NUM_OF_KEYS,
+	}
 }
