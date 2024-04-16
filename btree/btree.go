@@ -20,7 +20,7 @@ type Node struct {
 	isLeaf bool
 }
 
-func (node *Node) searchNode(key int, pos *int) *Node {
+func (node *Node) searchNode(key int, pos *int) (*Node, int) {
 	// if found return the node
 	// else return nil
 	log.Println("searching for key ", key, " in the node ", node.keys)
@@ -29,23 +29,23 @@ func (node *Node) searchNode(key int, pos *int) *Node {
 			*pos++;
 		}else if key ==  node.keys[*pos]{
 			log.Println("found a match at position ", *pos, "in node ", node.keys)
-			return node;
+			return node, *pos;
 		}else{
 			break
 		}
 	}
-	return nil
+	return nil, -1
 }
 
-func (node *Node) search(key int) *Node {
+func (node *Node) search(key int) (*Node, int) {
 	if node == nil {
-		return nil
+		return nil, -1
 	}
 	pos := 0
 
-	found := node.searchNode(key, &pos)
+	found, indexOfKey := node.searchNode(key, &pos)
 	if found != nil {
-		return found
+		return found, indexOfKey
 	}
 
 	return node.children[pos].search(key)
@@ -251,10 +251,10 @@ type Tree struct {
 	maxKeys int
 }
 
-func (tree *Tree) Find(key int) *Node {
+func (tree *Tree) Find(key int) (*Node, int) {
 	currentNode := tree.root
-	result := currentNode.search(key)
-	return result
+	result, posOfKey := currentNode.search(key)
+	return result, posOfKey
 }
 
 func (tree *Tree) Put(key int) {
@@ -266,6 +266,127 @@ func (tree *Tree) Put(key int) {
 	currentNode.insert(key, tree)
 }
 
+// [1, 2, 3, 4, 5]
+func (node *Node) deleteKeyInNode(pos int) {
+	n := node.numKeys
+	i := pos + 1
+	for ; i < n; i++ {
+		node.keys[i - 1] = node.keys[i]
+	}
+	node.keys[i - 1] = 0
+	node.numKeys--
+}
+
+func (node *Node) getSiblings() (*Node, int, string) {
+	parentNode := node.parent
+	var leftSibling *Node
+	var separaterIndex int
+	var nodeIndexInParent int
+
+	// Find the index of the node in the parent's children
+	for i := 0; i < parentNode.numKeys + 1; i++ {
+		if parentNode.children[i] == node {
+			nodeIndexInParent = i
+			break
+		}
+	}
+	// If the node is not the first child, then left sibling exists
+	if nodeIndexInParent > 0 {
+		// left sibling exists
+		leftSibling = parentNode.children[nodeIndexInParent - 1]
+		separaterIndex = nodeIndexInParent - 1
+		return leftSibling, separaterIndex, "left"
+		
+	}
+	var rightSibling *Node
+	// If the node is not the last child, then right sibling exists
+	if nodeIndexInParent < parentNode.numKeys {
+		// right sibling exists
+		rightSibling = parentNode.children[nodeIndexInParent + 1]
+		separaterIndex = nodeIndexInParent
+		return rightSibling, separaterIndex, "right"	
+		
+	}
+
+	return nil, -1, ""
+}
+
+func (node *Node) borrowFromLeftSibling(leftSibling *Node, separaterIndex int) {
+	parentNode := node.parent
+	rightMostkeyInLeftSibling := leftSibling.keys[leftSibling.numKeys - 1]
+	separater := parentNode.keys[separaterIndex]
+	node.insertIntoNode(separater)
+	parentNode.keys[separaterIndex] = rightMostkeyInLeftSibling
+	leftSibling.deleteKeyInNode(leftSibling.numKeys - 1)
+}
+
+func (node *Node) borrowFromRightSibling(rightSibling *Node, separaterIndex int) {
+	parentNode := node.parent
+	leftMostKeyInRightSibling := rightSibling.keys[0]
+	separater := parentNode.keys[separaterIndex]
+	node.insertIntoNode(separater)
+	parentNode.keys[separaterIndex] = leftMostKeyInRightSibling
+	rightSibling.deleteKeyInNode(0)
+}
+
+func (node *Node) rebalancing() {
+	if node.numKeys >= MIN_NUM_OF_KEYS {
+		return
+	}
+
+	sibling, separaterIndex, siblingType := node.getSiblings()
+	if sibling == nil {
+		log.Println("no sibling to borrow from")
+		// we merge with parent here
+	}
+	borrowed := false
+	switch siblingType {
+		case "left":
+			if sibling.numKeys > MIN_NUM_OF_KEYS {
+				node.borrowFromLeftSibling(sibling, separaterIndex)
+				borrowed = true
+				break
+			}
+		case "right":
+			if sibling.numKeys > MIN_NUM_OF_KEYS {
+				node.borrowFromRightSibling(sibling, separaterIndex)
+				borrowed = true
+				break
+			}
+	}
+	if !borrowed {
+		// if not borrowed we try merging with one of the sibling
+	}
+}
+
+func (tree *Tree) Del(key int) {
+	node, posOfKey := tree.root.search(key)
+	if node == nil {
+		log.Println("key does not exist in the btree")
+		return
+	}
+	if node.isLeaf {
+		// key is in a leaf node
+		// 1. delete the key
+		node.deleteKeyInNode(posOfKey)
+		if node.numKeys >= MIN_NUM_OF_KEYS {
+			// no need to rebalance, since the noOfKeys is >= minimum number of keys in a node threshold
+			return
+		}
+		node.rebalancing()
+		// 2. check the node for rebalancing
+		//     - borrow from left sibling, if left sibling can spare keys (or)
+		// 	   - borrow from right sibling, if right sibling can spare keys
+		// 	   - if left sibling and right sibling cannot spare keys, then
+		// 	   - merge with left sibling, if left sibling is not nil (or)
+		// 	   - merge with right sibling, if right sibling is not nil
+		//     - when merging with left or right, the parent separater key comes down(removed from the parent node)
+		// 	   - now recursively call this parentNode for rebalancing
+
+	}
+
+}
+
 func (tree *Tree) Print() []int {
     if tree.root == nil {
         return []int{}
@@ -275,8 +396,6 @@ func (tree *Tree) Print() []int {
     tree.root.inorder(&result)
     return result
 }
-
-
 
 func NewTree() *Tree {
 	return &Tree{

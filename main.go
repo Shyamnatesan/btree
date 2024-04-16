@@ -9,14 +9,12 @@ import (
 )
 
 func generateUniqueRandomNumbers(n, min, max int) []int {
-	if max-min < n {
+	if max - min < n {
 		fmt.Println("Error: Cannot generate unique numbers with the given range and count.")
 		return nil
 	}
-
 	nums := make(map[int]bool)
 	result := make([]int, 0, n)
-
 	for len(nums) < n {
 		num := rand.Intn(max-min) + min
 		if !nums[num] {
@@ -24,7 +22,6 @@ func generateUniqueRandomNumbers(n, min, max int) []int {
 			result = append(result, num)
 		}
 	}
-
 	return result
 }
 
@@ -35,10 +32,8 @@ func main(){
 	for _, in := range insertInput{
 		btree.Put(in)
 	}
-
 	inorder := btree.Print()
 	log.Println("inorder traversal of the whole btree ==============================================>>>>>>>>> ")
 	log.Println(inorder)
 	log.Println("===========================================================================================> ")
-
 }
